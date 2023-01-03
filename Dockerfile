@@ -1,5 +1,14 @@
     FROM centos:7
     ENV container docker
+    ENV RD_HOME=/opt/rivendell \
+        RD_USER=rduser \
+        RD_PASS=rduser \
+        RD_GROUP=rivendell \
+        RD_TIMEZONE=UTC \
+        RD_FQDN=rivendell.example.com \
+        RDADMIN_USER=rdadmin \
+        RDADMIN_PASS=rdadmin
+
     RUN (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == \
     systemd-tmpfiles-setup.service ] || rm -f $i; done);
     RUN rm -f /lib/systemd/system/multi-user.target.wants/*;\
@@ -13,17 +22,15 @@
     #CMD [“/usr/sbin/init”]
 
     # Create rduser (password is rduser)
-    RUN adduser --create-home --groups wheel,audio rduser ; \
-    echo "rduser:rduser" | chpasswd ;\
+    RUN adduser --create-home --groups wheel,audio ${RD_USER} ; \
+    echo "${RD_USER}:${RD_PASS}" | chpasswd ;\
     mkdir -m 0750 /etc/sudoers.d && \
-    echo "rduser ALL=(root) NOPASSWD:ALL" >/etc/sudoers.d/rduser && \
-    chmod 0440 /etc/sudoers.d/rduser
-
+    echo "${RD_USER} ALL=(root) NOPASSWD:ALL" >/etc/sudoers.d/rduser && \
+    chmod 0440 /etc/sudoers.d/${RD_USER}
     # locale-gen en
 
     # Install EPEL repos
-    RUN yum install -y epel-release; \
-    yum-config-manager --enable epel-testing
+    RUN yum install -y epel-release
 
     # Get repo GPG keys
     #RUN rpm –import https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL http://download.paravelsystems.com/CentOS/7/RPM-GPG-KEY-Paravel-Broadcast
@@ -34,13 +41,13 @@
     wget http://download.paravelsystems.com/CentOS/7rd3/RPM-GPG-KEY-Paravel-Broadcast -P /etc/pki/rpm-gpg
 
     #RUN yum-config-manager -add-repo http://download.paravelsystems.com/CentOS/7/Paravel-Broadcast.repo ; \
-    RUN yum install -y rivendell sudo lame faac libaacplus twolame libmad id3lib icewm jackd x11vnc openssh-server tigervnc-server-minimal tigervnc-server supervisor cronie ghostscript-fonts less; \
-    /usr/sbin/sshd-keygen
+ #   RUN yum install -y rivendell sudo lame faac libaacplus twolame libmad id3lib icewm jackd x11vnc openssh-server tigervnc-server-minimal tigervnc-server supervisor cronie ghostscript-fonts less; \
+ #   /usr/sbin/sshd-keygen
 
     #COPY rdmysql.conf /etc/mysql/conf.d/rdmysql.cnf
     #COPY rd.icecast.conf /etc/rd.icecast.conf
-    COPY rd.conf /etc/rd.conf
-    COPY supervisord.conf /etc/supervisord.d/supervisord.conf
+  #  COPY rd.conf /etc/rd.conf
+ #   COPY supervisord.conf /etc/supervisord.d/supervisord.conf
 
     # copy darkice binary and config
    # RUN yum install -y darkice
