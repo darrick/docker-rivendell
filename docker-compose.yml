@@ -1,0 +1,36 @@
+version: '3.4'
+
+services:
+  rivendell:
+    image: rivendell
+    hostname: rivendell
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      MYSQL_HOST: db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: example
+      MYSQL_DB: Rivendell
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    ports:
+      - "3389:3389"
+  db:
+    image: mariadb:10.5
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: example
+      MARIADB_USER: rduser
+      MARIADB_PASSWORD: letmein
+      MARIADB_DATABASE: Rivendell
+    volumes:
+      - rivendell-mysql-data:/var/lib/mysql
+      - ./rivendell-install/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+volumes:
+  rivendell-mysql-data:
+  rivendell-audio-store:
