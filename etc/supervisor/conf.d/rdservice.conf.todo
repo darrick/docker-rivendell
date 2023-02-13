@@ -1,0 +1,28 @@
+#starts:
+#/usr/sbin/ripcd
+#/usr/sbin/rdcatchd
+#/usr/sbin/rdpadd
+#/usr/sbin/rdpadengined
+#/usr/sbin/rdvairplayd
+[program:rdservice]
+command=/usr/sbin/rdservice
+user=root
+autorestart=true
+priority=400
+
+[Unit]
+Description=Rivendell Radio Automation System
+After=network.target remote-fs.target nss-lookup.target
+
+[Service]
+LimitNOFILE=4096
+Type=simple
+ExecStart=/usr/sbin/rdservice
+PrivateTmp=false
+Restart=always
+RestartSec=2
+StartLimitInterval=120
+StartLimitBurst=50
+
+[Install]
+WantedBy=multi-user.target

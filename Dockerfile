@@ -1,4 +1,3 @@
-
 FROM centos:7 as builder
 LABEL Name=rivendell Version=0.0.1
 RUN yum -y --setopt=tsflags="" groupinstall "Development Tools" \
@@ -59,14 +58,16 @@ VOLUME [ "/sys/fs/cgroup" ]
 # Add RD_USER
 #
 RUN adduser -c Rivendell\ Audio --groups audio,wheel ${RD_USER} && \
-    mkdir -p /home/${RD_USER}/rd_xfer && \
+    echo ${RD_USER}:${RD_PASS} | chpasswd
+
+RUN mkdir -p /home/${RD_USER}/rd_xfer && \
     mkdir -p /home/${RD_USER}/music_export && \
     mkdir -p /home/${RD_USER}/music_import && \
     mkdir -p /home/${RD_USER}/traffic_export && \
     mkdir -p /home/${RD_USER}/traffic_import && \
     chown -R ${RD_USER}:${RD_USER} /home/${RD_USER}&& \
-    chmod 0755 /home/${RD_USER} && \
-    echo ${RD_USER}:${RD_PASS} | chpasswd
+    chmod 0755 /home/${RD_USER}
+
 
 #
 # Configure Repos
@@ -82,10 +83,10 @@ RUN yum -y --setopt=tsflags="" groupinstall "X window system" \
 #
 # Install Rivendell
 #
-COPY  ./rivendell-install/rd.conf /etc/rd.conf
+#COPY  ./rivendell-install/rd.conf /etc/rd.conf
 RUN yum -y --setopt=tsflags="" install rivendell
 
-# Make sure login works
+# Install XRDP
 RUN yum -y install --setopt=tsflags="" pulseaudio pulseaudio-libs xrdp xorgxrdp supervisor
 
 COPY --from=builder /usr/lib64/pulse-10.0/modules /usr/lib64/pulse-10.0/modules
