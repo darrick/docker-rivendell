@@ -1,0 +1,2 @@
+#Add any required envvar overrides to this file, it is sourced from /etc/profile
+#export JACK_PROMISCUOUS_SERVER=jack

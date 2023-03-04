@@ -1,0 +1,23 @@
+#!/bin/sh
+
+#######################################################################
+##
+## This script is started by Rivendell caed when the Rivendell daemons
+## are launched. The script assumes a "default" Rivendell installation
+## with the username 'rd' automatically logged in and running the
+## windowing system.
+##
+## Change the JACK sample rate to match your Rivendell sample rate
+## set in RDAdmin->System Settings.
+##
+#######################################################################
+
+export LANG=en_US.UTF-8
+export TERM=xterm
+export QTDIR=/usr/lib64/qt4
+export PATH=/sbin:/bin:/usr/bin:/usr/sbin:/usr/local/sbin:/usr/local/bin:/home/rd/bin
+export XDG_DATA_DIRS=/usr/local/share/:/usr/share/
+export XDG_RUNTIME_DIR=/run/user/1000
+export QT_GRAPHICSSYSTEM_CHECKED=1
+
+exec /usr/bin/jackd --name default -d dummy -r 48000 2>&1 > /var/tmp/jackd.log
