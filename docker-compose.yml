@@ -10,16 +10,23 @@ services:
       dockerfile: ./Dockerfile
     environment:
       MYSQL_HOST: db
-      MYSQL_USER: root
-      MYSQL_PASSWORD: example
+      MYSQL_ROOT_USER: root
+      MYSQL_ROOT_PASSWORD: example
       MYSQL_DB: Rivendell
+      RD_MYSQL_USER: rd
+      RD_MYSQL_PASS: letmein
+      RD_USER: rduser
+      RD_USER_PASS: rduser
+      RD_GROUP: rivendell
+      RD_TIMEZONE: UTC
+      RDADMIN_USER: admin
+      RDADMIN_PASS: admin
     tmpfs:
       - /run
       - /tmp
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - rivendell-audio-store:/var/snd
+      - rivendell-audio-store-test:/var/snd
 
     ports:
       - "3389:3389"
@@ -28,12 +35,8 @@ services:
     restart: always
     environment:
       MARIADB_ROOT_PASSWORD: example
-      MARIADB_USER: rduser
-      MARIADB_PASSWORD: letmein
-      MARIADB_DATABASE: Rivendell
     volumes:
-      - rivendell-mysql-data:/var/lib/mysql
-      - ./rivendell-install/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - rivendell-mysql-data-test:/var/lib/mysql
 volumes:
-  rivendell-mysql-data:
-  rivendell-audio-store:
+  rivendell-mysql-data-test:
+  rivendell-audio-store-test:

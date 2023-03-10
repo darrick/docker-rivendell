@@ -11,19 +11,7 @@ ENV REPO_HOSTNAME="download.paravelsystems.com" \
     RDADMIN_USER=rdadmin \
     RDADMIN_PASS=rdadmin
 
-#
-# Add RD_USER
-#
-RUN adduser -c Rivendell\ Audio --groups audio,wheel rduser && echo rduser:rduser | chpasswd
-
-RUN mkdir -p /home/rduser/rd_xfer; \
-    mkdir -p /home/rduser/music_export; \
-    mkdir -p /home/rduser/music_import; \
-    mkdir -p /home/rduser/traffic_export; \
-    mkdir -p /home/rduser/traffic_import; \
-    chown -R rduser:rduser /home/rduser; \
-    chmod 0755 /home/rduser;
-
+RUN dnf -y remove pipewire-jack-audio-connection-kit pipewire;
 #
 # Configure Repos
 #
@@ -31,13 +19,9 @@ RUN dnf -y install wget; \
     wget https://software.paravelsystems.com/rhel/9rd4/RPM-GPG-KEY-Paravel-Broadcast -P /etc/pki/rpm-gpg/; \
     wget https://software.paravelsystems.com/rhel/9rd4/Paravel-Rivendell4.repo -P /etc/yum.repos.d/; \
     dnf -y --setopt=tsflags="" install rhel-rivendell-installer; \
-    dnf -y install patch lame chrony twolame libmad rsyslog lame-libs jack-audio-connection-kit; \
+    dnf -y install procps-ng patch lame chrony twolame libmad rsyslog lame-libs jack-audio-connection-kit jack-audio-connection-kit-example-clients; \
     wget http://mirror.ppa.trinitydesktop.org/trinity/rpm/el9/trinity-r14/RPMS/noarch/trinity-repo-14.0.13-1.el9.noarch.rpm; \
     rpm -Uvh trinity-repo*rpm;
-
-ADD etc/asound.conf /etc/asound.conf
-ADD etc/rd.conf /etc/rd.conf
-ADD usr/local/bin/start_jack /usr/local/bin/start_jack
 
 #
 # Install Rivendell
@@ -54,11 +38,19 @@ RUN systemctl enable rsyslog; \
     cp /usr/share/rhel-rivendell-installer/skel/paravel_support.pdf /etc/skel/Desktop/First\ Steps.pdf; \
     ln -s /usr/share/rivendell/opsguide.pdf /etc/skel/Desktop/Operations\ Guide.pdf;
 
+ADD etc/rd.conf /etc/rd.conf
+
+RUN echo "load-module /usr/lib64/pulse-15.0/modules/module-jack-source.so connect=0" >> /etc/xrdp/pulse/default.pa; \
+    echo "load-module /usr/lib64/pulse-15.0/modules/module-loopback.so source=jack_in sink=xrdp-sink" >> /etc/xrdp/pulse/default.pa;
 
 RUN dnf -y --setopt=tsflags="" install rivendell
 
 RUN rdgen -t 10 -l 16 /var/snd/999999_001.wav
 
+ADD usr/bin/start-pulseaudio-x11 /usr/bin/start-pulseaudio-x11
+RUN dnf -y install nmap-ncat
 #RUN rm /home/rd/.Xclients
+COPY docker-entrypoint.sh /usr/local/bin/
 
-CMD ["/usr/sbin/init"]
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD [ "/usr/sbin/init" ]
