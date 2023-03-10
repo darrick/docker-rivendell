@@ -1,4 +1,4 @@
-FROM rocky-xfce4-xrdp:latest
+FROM darrick1/rockylinux-xfce4-xrdp:9
 LABEL Name=rivendell Version=0.0.1
 ENV container docker
 ENV REPO_HOSTNAME="download.paravelsystems.com" \
