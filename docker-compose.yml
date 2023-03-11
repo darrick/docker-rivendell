@@ -2,16 +2,13 @@ version: '3.4'
 
 services:
   rivendell:
-    image: rivendell
+    image: darrick1/rivendell:4
     hostname: rivendell
     shm_size: '1gb'
     cap_add:
       - SYS_ADMIN
     devices:
       - /dev/fuse
-    build:
-      context: .
-      dockerfile: ./Dockerfile
     environment:
       MYSQL_HOST: db
       MYSQL_ROOT_USER: root
