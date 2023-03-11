@@ -5,6 +5,10 @@ services:
     image: rivendell
     hostname: rivendell
     shm_size: '1gb'
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
     build:
       context: .
       dockerfile: ./Dockerfile
