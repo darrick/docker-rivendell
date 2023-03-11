@@ -2,7 +2,7 @@ version: '3.4'
 
 services:
   rivendell:
-    image: darrick1/rivendell:4
+    image: darrick1/rivendell:latest
     hostname: rivendell
     shm_size: '1gb'
     cap_add:
