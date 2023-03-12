@@ -1,0 +1,6 @@
+rivendell_0:playout_0L
+    PulseAudio JACK Source:front-left
+
+rivendell_0:playout_0R
+    PulseAudio JACK Source:front-right
+

@@ -1,0 +1,17 @@
+[Unit]
+Description=Rivendell Radio Automation System
+After=network.target remote-fs.target nss-lookup.target
+
+[Service]
+LimitNOFILE=4096
+Type=simple
+Environment=JACK_PROMISCUOUS_SERVER=audio
+ExecStart=/usr/sbin/rdservice
+PrivateTmp=false
+Restart=always
+RestartSec=2
+StartLimitInterval=120
+StartLimitBurst=50
+
+[Install]
+WantedBy=multi-user.target

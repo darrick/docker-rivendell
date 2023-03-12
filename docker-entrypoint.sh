@@ -15,6 +15,7 @@ sed -i "s/RD_MYSQL_USER/$RD_MYSQL_USER/" /etc/rd.conf
 sed -i "s/RD_MYSQL_PASS/$RD_MYSQL_PASS/" /etc/rd.conf
 sed -i "s/MYSQL_DB/$MYSQL_DB/" /etc/rd.conf
 
+mysql -u $MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST -e "SET GLOBAL sql_mode = 'NO_ENGINE_SUBSTITUTION';"
 #
 # Create Rivendell Database
 #
@@ -24,6 +25,7 @@ if [ -z "$DATABASE_ALREADY_EXISTS" ]; then
     echo "GRANT SELECT,INSERT,UPDATE,DELETE,CREATE,DROP,INDEX,ALTER,CREATE TEMPORARY TABLES,LOCK TABLES ON $MYSQL_DB.* TO '$RD_MYSQL_USER'@'%';" | mysql -u $MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST
     echo "Creating $MYSQL_DB database"
     rddbmgr --create --generate-audio
+    rdgen -t 10 -l 16 /var/snd/999999_001.wav
     echo "UPDATE STATIONS set START_JACK='Y', JACK_COMMAND_LINE='/usr/bin/jackd --name default -d dummy -r 48000' WHERE NAME='rivendell';" | mysql -u $MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -h $MYSQL_HOST $MYSQL_DB
 fi
 

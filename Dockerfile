@@ -1,4 +1,4 @@
-FROM darrick1/rockylinux-xfce4-xrdp:9
+FROM darrick1/rockylinux-xfce4-xrdp:7
 LABEL Name=rivendell Version=0.0.1
 ENV container docker
 ENV REPO_HOSTNAME="download.paravelsystems.com" \
@@ -11,46 +11,42 @@ ENV REPO_HOSTNAME="download.paravelsystems.com" \
     RDADMIN_USER=rdadmin \
     RDADMIN_PASS=rdadmin
 
-RUN dnf -y remove pipewire-jack-audio-connection-kit pipewire;
 #
 # Configure Repos
 #
-RUN dnf -y install wget; \
-    wget https://software.paravelsystems.com/rhel/9rd4/RPM-GPG-KEY-Paravel-Broadcast -P /etc/pki/rpm-gpg/; \
-    wget https://software.paravelsystems.com/rhel/9rd4/Paravel-Rivendell4.repo -P /etc/yum.repos.d/; \
-    dnf -y --setopt=tsflags="" install rhel-rivendell-installer; \
-    dnf -y install procps-ng patch lame chrony twolame libmad rsyslog lame-libs jack-audio-connection-kit jack-audio-connection-kit-example-clients; \
-    wget http://mirror.ppa.trinitydesktop.org/trinity/rpm/el9/trinity-r14/RPMS/noarch/trinity-repo-14.0.13-1.el9.noarch.rpm; \
-    rpm -Uvh trinity-repo*rpm;
-
+RUN yum -y install wget; \
+    wget http://download.paravelsystems.com/CentOS/7rd3/RPM-GPG-KEY-Paravel-Broadcast -P /etc/pki/rpm-gpg/; \
+    wget http://download.paravelsystems.com/CentOS/7rd3/Paravel-Rivendell3.repo -P /etc/yum.repos.d/; \
+    yum -y install procps-ng patch lame chrony twolame libmad rsyslog lame-libs jack;
 #
 # Install Rivendell
 #
-RUN systemctl enable rsyslog; \
-    patch -p0 /etc/rsyslog.conf /usr/share/rhel-rivendell-installer/rsyslog.conf.patch; \
-    mv /etc/selinux/config /etc/selinux/config-original; \
-    cp -f /usr/share/rhel-rivendell-installer/selinux.config /etc/selinux/config; \
-    cp /usr/share/rhel-rivendell-installer/Reyware.repo /etc/yum.repos.d/; \
-    cp /usr/share/rhel-rivendell-installer/RPM-GPG-KEY-Reyware /etc/pki/rpm-gpg/; \
+RUN yum -y --setopt=tsflags="" install rivendell-install; \
+    cp /usr/share/rivendell-install/*.repo /etc/yum.repos.d/; \
+    cp /usr/share/rivendell-install/RPM-GPG-KEY* /etc/pki/rpm-gpg/; \
     mkdir -p /usr/share/pixmaps/rivendell; \
-    cp /usr/share/rhel-rivendell-installer/no_screen_blank.conf /etc/X11/xorg.conf.d/; \
+    cp /usr/share/rivendell-install/rdairplay_skin.png /usr/share/pixmaps/rivendell/; \
+    cp /usr/share/rivendell-install/rdpanel_skin.png /usr/share/pixmaps/rivendell/; \
+    cp /usr/share/rivendell-install/no_screen_blank.conf /etc/X11/xorg.conf.d/; \
     mkdir -p /etc/skel/Desktop; \
-    cp /usr/share/rhel-rivendell-installer/skel/paravel_support.pdf /etc/skel/Desktop/First\ Steps.pdf; \
-    ln -s /usr/share/rivendell/opsguide.pdf /etc/skel/Desktop/Operations\ Guide.pdf;
+    ln -s /usr/share/rivendell/opsguide.pdf /etc/skel/Desktop/Operations\ Guide.pdf; \
+    cp /usr/share/rivendell-install/skel/paravel_support.pdf /etc/skel/Desktop/First\ Steps.pdf; \
+    tar -C /etc/skel -zxf /usr/share/rivendell-install/xfce-config.tgz; \
+    cp /usr/share/rivendell-install/qtrc /etc/skel/.qt/; \
+    yum -y --setopt=tsflags="" install rivendell;
 
 ADD etc/rd.conf /etc/rd.conf
 
-RUN echo "load-module /usr/lib64/pulse-15.0/modules/module-jack-source.so connect=0" >> /etc/xrdp/pulse/default.pa; \
-    echo "load-module /usr/lib64/pulse-15.0/modules/module-loopback.so source=jack_in sink=xrdp-sink" >> /etc/xrdp/pulse/default.pa;
+RUN echo "load-module /usr/lib64/pulse-10.0/modules/module-jack-source.so connect=0" >> /etc/xrdp/pulse/default.pa; \
+    echo "load-module /usr/lib64/pulse-10.0/modules/module-loopback.so source=jack_in sink=xrdp-sink" >> /etc/xrdp/pulse/default.pa;
 
-RUN dnf -y --setopt=tsflags="" install rivendell
+RUN yum -y install nmap-ncat less fuse
+RUN pip3 install jack-matchmaker
 
-RUN rdgen -t 10 -l 16 /var/snd/999999_001.wav
-
-ADD usr/bin/start-pulseaudio-x11 /usr/bin/start-pulseaudio-x11
-RUN dnf -y install nmap-ncat
 #RUN rm /home/rd/.Xclients
-COPY docker-entrypoint.sh /usr/local/bin/
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY etc /etc
+RUN systemctl enable jack-matchmaker
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD [ "/usr/sbin/init" ]

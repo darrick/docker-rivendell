@@ -2,7 +2,7 @@ version: '3.4'
 
 services:
   rivendell:
-    image: darrick1/rivendell:v4.0.0rc2
+    image: darrick1/rivendell:v3.6.7
     hostname: rivendell
     shm_size: '1gb'
     cap_add:
@@ -27,7 +27,7 @@ services:
       - /tmp
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
-      - rivendell-audio-store-test:/var/snd
+      - rivendell-audio-store-v3:/var/snd
 
     ports:
       - "3389:3389"
@@ -37,7 +37,7 @@ services:
     environment:
       MARIADB_ROOT_PASSWORD: example
     volumes:
-      - rivendell-mysql-data-test:/var/lib/mysql
+      - rivendell-mysql-data-v3:/var/lib/mysql
 volumes:
-  rivendell-mysql-data-test:
-  rivendell-audio-store-test:
+  rivendell-mysql-data-v3:
+  rivendell-audio-store-v3:
