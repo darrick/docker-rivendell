@@ -1,5 +1,5 @@
-FROM darrick1/rockylinux-xfce4-xrdp:9
-LABEL Name=rivendell Version=0.0.1
+FROM darrick1/rockylinux-xfce4-xrdp:8
+LABEL Name=rivendell Version=4.1.2
 ENV container docker
 ENV REPO_HOSTNAME="download.paravelsystems.com" \
     RD_HOME=/opt/rivendell \
@@ -11,23 +11,26 @@ ENV REPO_HOSTNAME="download.paravelsystems.com" \
     RDADMIN_USER=rdadmin \
     RDADMIN_PASS=rdadmin
 
-RUN dnf -y remove pipewire-jack-audio-connection-kit pipewire;
 #
 # Configure Repos
 #
 RUN dnf -y install wget; \
-    wget https://software.paravelsystems.com/rhel/9rd4/RPM-GPG-KEY-Paravel-Broadcast -P /etc/pki/rpm-gpg/; \
-    wget https://software.paravelsystems.com/rhel/9rd4/Paravel-Rivendell4.repo -P /etc/yum.repos.d/; \
+    wget https://software.paravelsystems.com/rhel/8rd4/RPM-GPG-KEY-Paravel-Broadcast -P /etc/pki/rpm-gpg/; \
+    wget https://software.paravelsystems.com/rhel/8rd4/Paravel-Rivendell4.repo -P /etc/yum.repos.d/; \
+    dnf -y clean expire-cache; \
     dnf -y --setopt=tsflags="" install rhel-rivendell-installer; \
-    dnf -y install procps-ng patch lame chrony twolame libmad rsyslog lame-libs jack-audio-connection-kit jack-audio-connection-kit-example-clients; \
-    wget http://mirror.ppa.trinitydesktop.org/trinity/rpm/el9/trinity-r14/RPMS/noarch/trinity-repo-14.0.13-1.el9.noarch.rpm; \
-    rpm -Uvh trinity-repo*rpm;
+    dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm; \
+    /usr/bin/crb enable; \
+    wget https://software.paravelsystems.com/rhel/8com/Paravel-Commercial.repo -P /etc/yum.repos.d/;
+
+# Install Deps
+RUN dnf -y install patch nc chrony libmad lame-libs twolame-libs jack-audio-connection-kit jack-audio-connection-kit-example-clients nfs-utils autofs; \
+    rpm -i /root/pulseaudio-module-jack-14*.rpm;
 
 #
 # Install Rivendell
 #
-RUN systemctl enable rsyslog; \
-    patch -p0 /etc/rsyslog.conf /usr/share/rhel-rivendell-installer/rsyslog.conf.patch; \
+RUN patch -p0 /etc/rsyslog.conf /usr/share/rhel-rivendell-installer/rsyslog.conf.patch; \
     mv /etc/selinux/config /etc/selinux/config-original; \
     cp -f /usr/share/rhel-rivendell-installer/selinux.config /etc/selinux/config; \
     cp /usr/share/rhel-rivendell-installer/Reyware.repo /etc/yum.repos.d/; \
@@ -36,19 +39,26 @@ RUN systemctl enable rsyslog; \
     cp /usr/share/rhel-rivendell-installer/no_screen_blank.conf /etc/X11/xorg.conf.d/; \
     mkdir -p /etc/skel/Desktop; \
     cp /usr/share/rhel-rivendell-installer/skel/paravel_support.pdf /etc/skel/Desktop/First\ Steps.pdf; \
-    ln -s /usr/share/rivendell/opsguide.pdf /etc/skel/Desktop/Operations\ Guide.pdf;
-
-ADD etc/rd.conf /etc/rd.conf
-
-RUN echo "load-module /usr/lib64/pulse-15.0/modules/module-jack-source.so connect=0" >> /etc/xrdp/pulse/default.pa; \
-    echo "load-module /usr/lib64/pulse-15.0/modules/module-loopback.so source=jack_in sink=xrdp-sink" >> /etc/xrdp/pulse/default.pa;
+    tar -C /etc/skel -zxf /usr/share/rhel-rivendell-installer/xfce-config.tgz; \
+    rm -rf /etc/skel/.config/Thunar; \
+    rm -rf /etc/skel/.config/dconf;
+   # ln -s /usr/share/rivendell/opsguide.pdf /etc/skel/Desktop/Operations\ Guide.pdf;
 
 RUN dnf -y --setopt=tsflags="" install rivendell
 
-RUN rdgen -t 10 -l 16 /var/snd/999999_001.wav
+RUN echo "load-module module-jack-source connect=0" >> /etc/xrdp/pulse/default.pa; \
+    echo "load-module module-loopback source=jack_in sink=xrdp-sink" >> /etc/xrdp/pulse/default.pa; \
+    echo "/usr/bin/jack_connect rivendell_0:playout_0L \"PulseAudio JACK Source:front-left\"" >> /usr/bin/start-pulseaudio-x11; \
+    echo "/usr/bin/jack_connect rivendell_0:playout_0R \"PulseAudio JACK Source:front-right\"" >> /usr/bin/start-pulseaudio-x11; \
+    rm -f /etc/systemd/user/sockets.target.wants/pulseaudio.socket; \
+    rm -f /etc/systemd/user/default.target.wants/pulseaudio.service;
 
-ADD usr/bin/start-pulseaudio-x11 /usr/bin/start-pulseaudio-x11
-RUN dnf -y install nmap-ncat
+#ADD etc/rd.conf /etc/rd.conf
+
+#RUN rdgen -t 10 -l 16 /var/snd/999999_001.wav
+
+#ADD usr/bin/start-pulseaudio-x11 /usr/bin/start-pulseaudio-x11
+#RUN dnf -y install nmap-ncat
 #RUN rm /home/rd/.Xclients
 COPY docker-entrypoint.sh /usr/local/bin/
 

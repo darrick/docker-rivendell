@@ -1,8 +1,8 @@
-version: '3.4'
+version: '4.1.2'
 
 services:
   rivendell:
-    image: darrick1/rivendell:4
+    image: darrick1/rivendell:4.1.2
     hostname: rivendell
     shm_size: '1gb'
     cap_add:
@@ -14,14 +14,20 @@ services:
       MYSQL_ROOT_USER: root
       MYSQL_ROOT_PASSWORD: example
       MYSQL_DB: Rivendell
-      RD_MYSQL_USER: rd
-      RD_MYSQL_PASS: letmein
-      RD_USER: rduser
-      RD_USER_PASS: rduser
+      MYSQL_HOSTNAME: db
+      MYSQL_LOGINNAME: rduser
+      MYSQL_PASSWORD: letmein
+      NFS_HOSTNAME:
+      NFS_MOUNT_SOURCE:
+      NFS_MOUNT_TYPE:
+      USER_NAME: rd
+      USER_PASSWORD: letmein
       RD_GROUP: rivendell
       RD_TIMEZONE: UTC
       RDADMIN_USER: admin
       RDADMIN_PASS: admin
+      MODE: server
+
     tmpfs:
       - /run
       - /tmp
