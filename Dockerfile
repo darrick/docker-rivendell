@@ -49,9 +49,7 @@ RUN dnf -y --setopt=tsflags="" install rivendell
 RUN echo "load-module module-jack-source connect=0" >> /etc/xrdp/pulse/default.pa; \
     echo "load-module module-loopback source=jack_in sink=xrdp-sink" >> /etc/xrdp/pulse/default.pa; \
     echo "/usr/bin/jack_connect rivendell_0:playout_0L \"PulseAudio JACK Source:front-left\"" >> /usr/bin/start-pulseaudio-x11; \
-    echo "/usr/bin/jack_connect rivendell_0:playout_0R \"PulseAudio JACK Source:front-right\"" >> /usr/bin/start-pulseaudio-x11; \
-    rm -f /etc/systemd/user/sockets.target.wants/pulseaudio.socket; \
-    rm -f /etc/systemd/user/default.target.wants/pulseaudio.service;
+    echo "/usr/bin/jack_connect rivendell_0:playout_0R \"PulseAudio JACK Source:front-right\"" >> /usr/bin/start-pulseaudio-x11;
 
 #ADD etc/rd.conf /etc/rd.conf
 
