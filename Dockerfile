@@ -1,15 +1,6 @@
 FROM darrick1/rockylinux-xfce4-xrdp:8
 LABEL Name=rivendell Version=4.1.2
 ENV container docker
-ENV REPO_HOSTNAME="download.paravelsystems.com" \
-    RD_HOME=/opt/rivendell \
-    RD_USER=rd \
-    RD_PASS=letmein \
-    RD_GROUP=rivendell \
-    RD_TIMEZONE=UTC \
-    RD_FQDN=rivendell.example.com \
-    RDADMIN_USER=rdadmin \
-    RDADMIN_PASS=rdadmin
 
 #
 # Configure Repos
@@ -42,7 +33,6 @@ RUN patch -p0 /etc/rsyslog.conf /usr/share/rhel-rivendell-installer/rsyslog.conf
     tar -C /etc/skel -zxf /usr/share/rhel-rivendell-installer/xfce-config.tgz; \
     rm -rf /etc/skel/.config/Thunar; \
     rm -rf /etc/skel/.config/dconf;
-   # ln -s /usr/share/rivendell/opsguide.pdf /etc/skel/Desktop/Operations\ Guide.pdf;
 
 RUN dnf -y --setopt=tsflags="" install rivendell
 
@@ -51,14 +41,8 @@ RUN echo "load-module module-jack-source connect=0" >> /etc/xrdp/pulse/default.p
     echo "/usr/bin/jack_connect rivendell_0:playout_0L \"PulseAudio JACK Source:front-left\"" >> /usr/bin/start-pulseaudio-x11; \
     echo "/usr/bin/jack_connect rivendell_0:playout_0R \"PulseAudio JACK Source:front-right\"" >> /usr/bin/start-pulseaudio-x11;
 
-#ADD etc/rd.conf /etc/rd.conf
-
-#RUN rdgen -t 10 -l 16 /var/snd/999999_001.wav
-
-#ADD usr/bin/start-pulseaudio-x11 /usr/bin/start-pulseaudio-x11
-#RUN dnf -y install nmap-ncat
-#RUN rm /home/rd/.Xclients
 COPY docker-entrypoint.sh /usr/local/bin/
+COPY installer_install_rivendell.sh /usr/local/bin/
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD [ "/usr/sbin/init" ]
