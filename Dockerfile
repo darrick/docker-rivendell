@@ -1,5 +1,5 @@
 FROM darrick1/rockylinux-xfce4-xrdp:8
-LABEL Name=rivendell Version=4.1.2
+LABEL Name=rivendell Version=4.1.3
 ENV container docker
 
 #
@@ -36,10 +36,16 @@ RUN patch -p0 /etc/rsyslog.conf /usr/share/rhel-rivendell-installer/rsyslog.conf
 
 RUN dnf -y --setopt=tsflags="" install rivendell
 
-RUN echo "load-module module-jack-source connect=0" >> /etc/xrdp/pulse/default.pa; \
-    echo "load-module module-loopback source=jack_in sink=xrdp-sink" >> /etc/xrdp/pulse/default.pa; \
-    echo "/usr/bin/jack_connect rivendell_0:playout_0L \"PulseAudio JACK Source:front-left\"" >> /usr/bin/start-pulseaudio-x11; \
-    echo "/usr/bin/jack_connect rivendell_0:playout_0R \"PulseAudio JACK Source:front-right\"" >> /usr/bin/start-pulseaudio-x11;
+#Configure XRDP-PULSEAUDIO
+COPY ./usr/libexec/pulseaudio-module-xrdp/load_pa_modules.sh /usr/libexec/pulseaudio-module-xrdp/
+
+#Add Environment=JACK_PROMISCUOUS_SERVER=audio
+COPY ./etc/skel/.config/systemd/user/pulseaudio.service /etc/skel/.config/systemd/user/pulseaudio.service
+
+#RUN echo "load-module module-jack-source connect=0" >> /etc/xrdp/pulse/default.pa; \
+#    echo "load-module module-loopback source=jack_in sink=xrdp-sink" >> /etc/xrdp/pulse/default.pa; \
+#    echo "/usr/bin/jack_connect rivendell_0:playout_0L \"PulseAudio JACK Source:front-left\"" >> /usr/bin/start-pulseaudio-x11; \
+#    echo "/usr/bin/jack_connect rivendell_0:playout_0R \"PulseAudio JACK Source:front-right\"" >> /usr/bin/start-pulseaudio-x11;
 
 COPY docker-entrypoint.sh /usr/local/bin/
 COPY installer_install_rivendell.sh /usr/local/bin/
