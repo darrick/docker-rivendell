@@ -50,5 +50,5 @@ COPY ./etc/skel/.config/systemd/user/pulseaudio.service /etc/skel/.config/system
 COPY docker-entrypoint.sh /usr/local/bin/
 COPY installer_install_rivendell.sh /usr/local/bin/
 
-ENTRYPOINT ["docker-entrypoint.sh"]
-CMD [ "/usr/sbin/init" ]
+ENTRYPOINT [ "/usr/sbin/init" ]
+CMD ["docker-entrypoint.sh"]
