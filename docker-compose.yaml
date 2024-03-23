@@ -1,15 +1,24 @@
-version: '4.1.3'
+version: '3'
 
 services:
   rivendell:
-    image: darrick1/rivendell:4.1.3
+    image: rivendell:desktop
     build:
-      context: .
+      context: Dockerfiles/desktop
       dockerfile: ./Dockerfile
     hostname: rivendell
     shm_size: '1gb'
     devices:
       - /dev/fuse
+    depends_on:
+      - db
+    command: docker-entrypoint.sh
+    #tmpfs:
+    #  - /run
+    #  - /run/lock
+    #  - /tmp
+    #  - /sys/fs/cgroup/systemd
+    #  - /var/lib/journal
     environment:
       MARIADB_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
       MYSQL_HOSTNAME: db
@@ -27,6 +36,7 @@ services:
       - start_config
   db:
     image: mariadb:10.5
+    hostname: db
     restart: always
     environment:
       MARIADB_ROOT_PASSWORD_FILE: /run/secrets/db_root_password

@@ -1,6 +1,78 @@
-FROM darrick1/rockylinux-xfce4-xrdp:8
+FROM rockylinux:8
+
 LABEL Name=rivendell Version=4.1.3
 ENV container docker
+
+RUN dnf -y install epel-release;
+
+# Install XFCE4
+RUN dnf -y install \
+        Thunar \
+        fuse \
+        openssh-askpass \
+        thunar-archive-plugin \
+        thunar-volman \
+        tumbler \
+        xfce-polkit \
+        xfce4-appfinder \
+        xfce4-panel \
+        xfce4-pulseaudio-plugin \
+        xfce4-session \
+        xfce4-settings \
+        xfce4-terminal \
+        xfconf \
+        xfdesktop \
+        xfwm4;
+
+# Install XRDP
+RUN dnf -y install xrdp xorgxrdp;
+ADD etc/sysconfig /etc/sysconfig
+ADD etc/xrdp /etc/xrdp
+
+# Install PulseAudio
+RUN dnf -y install \
+        pulseaudio \
+        pulseaudio-libs \
+        alsa-plugins-pulseaudio \
+        pulseaudio-module-x11;
+COPY ./usr/lib64/pulse-14.0/modules /usr/lib64/pulse-14.0/modules
+COPY ./pulseaudio-module-jack-14*.rpm /root
+COPY ./usr/libexec/pulseaudio-module-xrdp/load_pa_modules.sh /usr/libexec/pulseaudio-module-xrdp/load_pa_modules.sh
+COPY ./etc/xdg/autostart/pulseaudio-xrdp.desktop /etc/xdg/autostart/pulseaudio-xrdp.desktop
+ADD etc/pulse /etc/pulse
+
+#
+# Configure systemd
+#
+RUN (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == \
+    systemd-tmpfiles-setup.service ] || rm -f $i; done); \
+    rm -f /etc/systemd/system/*.wants/*;\
+    rm -f /lib/systemd/system/local-fs.target.wants/*; \
+    rm -f /lib/systemd/system/sockets.target.wants/*udev*; \
+    rm -f /lib/systemd/system/sockets.target.wants/*initctl*; \
+    rm -f /lib/systemd/system/basic.target.wants/*;\
+    rm -f /usr/lib/systemd/system/multi-user.target.wants/systemd-update-utmp-runlevel.service; \
+    rm -f /lib/systemd/system/anaconda.target.wants/*;
+#VOLUME [ "/sys/fs/cgroup" ]
+
+RUN systemctl set-default multi-user.target; \
+    systemctl enable xrdp; \
+    systemctl enable xrdp-sesman; \
+    systemctl unmask systemd-logind.service;
+
+# Setup LANG
+RUN dnf -y install glibc-langpack-en; \
+    sed -i -e 's/C.UTF-8/en_US.utf8/' /etc/locale.conf;
+
+RUN dnf -y remove policycoreutils; \
+    dnf -y autoremove; \
+    dnf -y clean all;
+
+# Add a user
+#RUN adduser -c Rivendell\ Audio --groups audio,wheel rd && echo rd:letmein | chpasswd
+ADD 999999_001.wav /tone.wav
+
+EXPOSE 3389
 
 #
 # Configure Repos
@@ -41,7 +113,6 @@ COPY ./usr/libexec/pulseaudio-module-xrdp/load_pa_modules.sh /usr/libexec/pulsea
 
 #Add Environment=JACK_PROMISCUOUS_SERVER=audio
 COPY ./etc/skel/.config/systemd/user/pulseaudio.service /etc/skel/.config/systemd/user/pulseaudio.service
-
 #RUN echo "load-module module-jack-source connect=0" >> /etc/xrdp/pulse/default.pa; \
 #    echo "load-module module-loopback source=jack_in sink=xrdp-sink" >> /etc/xrdp/pulse/default.pa; \
 #    echo "/usr/bin/jack_connect rivendell_0:playout_0L \"PulseAudio JACK Source:front-left\"" >> /usr/bin/start-pulseaudio-x11; \
@@ -50,5 +121,5 @@ COPY ./etc/skel/.config/systemd/user/pulseaudio.service /etc/skel/.config/system
 COPY docker-entrypoint.sh /usr/local/bin/
 COPY installer_install_rivendell.sh /usr/local/bin/
 
-ENTRYPOINT [ "/usr/sbin/init" ]
-CMD ["docker-entrypoint.sh"]
+#ENTRYPOINT [ "docker-entrypoint.sh" ]
+CMD ["/usr/sbin/init"]
